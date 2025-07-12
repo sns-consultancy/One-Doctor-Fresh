@@ -1,0 +1,63 @@
+.container {
+  max-width: 350px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #f9fafb;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2563eb;
+  margin-bottom: 1.5rem;
+}
+
+.input {
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.button {
+  background: #2563eb;
+  color: #fff;
+  padding: 0.6rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background 0.2s;
+}
+
+.button:hover {
+  background: #1d4ed8;
+}
+
+.message {
+  margin-top: 1rem;
+  color: #16a34a;
+  text-align: center;
+  font-weight: 500;
+}
+.signupOption {
+  margin-top: 1rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.signupLink {
+  color: #2563eb;
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: 500;
+}
