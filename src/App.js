@@ -13,6 +13,7 @@ import NoteSummarizer from "./pages/NoteSummarizer";
 import About from "./pages/About";
 import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
+import MedicationHistory from "./pages/MedicationHistory";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from './components/NavBar';
 import "./App.css";
@@ -67,6 +68,7 @@ function AppContent() {
             <Link to="/home">Home</Link> |{" "}
             <Link to="/submit">Submit Data</Link> |{" "}
             <Link to="/view">View Data</Link> |{" "}
+            <Link to="/medication-history">Medication History</Link> |{" "}
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               style={{
@@ -123,6 +125,7 @@ function AppContent() {
                 <li onClick={() => handleNav("/home")}><HomeIcon size={16} /> Home</li>
                 <li onClick={() => handleNav("/submit")}><FilePlus size={16} /> Submit Data</li>
                 <li onClick={() => handleNav("/view")}><Eye size={16} /> View Data</li>
+                <li onClick={() => handleNav("/medication-history")}><FileText size={16} /> Medication History</li>
                 <li onClick={() => handleNav("/medical-history")}><FileText size={16} /> Medical History</li>
                 <li onClick={() => handleNav("/about")}><Info size={16} /> About Us</li>
                 <li onClick={() => handleNav("/terms")}><FileLock size={16} /> Terms & Conditions</li>
@@ -151,6 +154,7 @@ function AppContent() {
         <Route path="/submit" element={<ProtectedRoute><SubmitHealthData /></ProtectedRoute>} />
         <Route path="/view" element={<ProtectedRoute><ViewHealthData /></ProtectedRoute>} />
         <Route path="/medical-history" element={<ProtectedRoute><MedicalHistory /></ProtectedRoute>} />
+        <Route path="/medication-history" element={<ProtectedRoute><MedicationHistory /></ProtectedRoute>} />
         <Route path="/symptom-checker" element={<ProtectedRoute><SymptomChecker /></ProtectedRoute>} />
         <Route path="/health-chatbot" element={<ProtectedRoute><HealthChatbot /></ProtectedRoute>} />
         <Route path="/note-summarizer" element={<ProtectedRoute><NoteSummarizer /></ProtectedRoute>} />
