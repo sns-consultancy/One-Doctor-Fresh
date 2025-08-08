@@ -6,6 +6,7 @@ import styles from './Signup.module.css';
 function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('patient');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -13,8 +14,8 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    if (!username || !password) {
-      setMessage('Please enter both username and password.');
+    if (!username || !password || !role) {
+      setMessage('Please enter username, password, and select a role.');
       return;
     }
 
@@ -23,7 +24,7 @@ function Login() {
       setMessage('');
 
       // Call loginUser and await the response
-      await loginUser(username, password);
+      await loginUser(username, password, role);
 
       setMessage('Login successful! Redirecting...');
       setTimeout(() => navigate('/home'), 1000);
@@ -58,8 +59,18 @@ function Login() {
           value={password}
           disabled={loading}
         />
-        <button 
-          type="submit" 
+        <select
+          className={styles.input}
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          disabled={loading}
+        >
+          <option value="patient">Patient</option>
+          <option value="doctor">Doctor</option>
+          <option value="hospital">Hospital</option>
+        </select>
+        <button
+          type="submit"
           className={styles.button}
           disabled={loading}
         >

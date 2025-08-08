@@ -8,7 +8,8 @@ function Signup() {
     username: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    role: 'patient'
   });
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,8 +26,8 @@ function Signup() {
     e.preventDefault();
 
     // Validation
-    if (!formData.username || !formData.email || !formData.password) {
-      setMessage('Please fill all required fields.');
+    if (!formData.username || !formData.email || !formData.password || !formData.role) {
+      setMessage('Please fill all required fields and select a role.');
       return;
     }
 
@@ -42,7 +43,8 @@ function Signup() {
       const userData = {
         username: formData.username,
         email: formData.email,
-        password: formData.password
+        password: formData.password,
+        role: formData.role,
       };
 
       await registerUser(userData);
@@ -103,8 +105,19 @@ function Signup() {
           onChange={handleChange}
           disabled={loading}
         />
-        <button 
-          type="submit" 
+        <select
+          className={styles.input}
+          name="role"
+          value={formData.role}
+          onChange={handleChange}
+          disabled={loading}
+        >
+          <option value="patient">Patient</option>
+          <option value="doctor">Doctor</option>
+          <option value="hospital">Hospital</option>
+        </select>
+        <button
+          type="submit"
           className={styles.button}
           disabled={loading}
         >

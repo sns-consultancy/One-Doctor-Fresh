@@ -13,6 +13,13 @@ import NoteSummarizer from "./pages/NoteSummarizer";
 import About from "./pages/About";
 import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
+import Profile from "./pages/Profile";
+import GrowthTracker from "./pages/GrowthTracker";
+import VitalsMonitoring from "./pages/VitalsMonitoring";
+import DietMentalHealth from "./pages/DietMentalHealth";
+import Appointments from "./pages/Appointments";
+import DocumentVault from "./pages/DocumentVault";
+import Teleconsultation from "./pages/Teleconsultation";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from './components/NavBar';
 import "./App.css";
@@ -25,7 +32,14 @@ import {
   FileLock,
   Mail,
   Moon,
-  Sun
+  Sun,
+  User,
+  TrendingUp,
+  Activity,
+  Heart,
+  Calendar,
+  Folder,
+  Video
 } from "lucide-react";
 
 function AppContent() {
@@ -123,6 +137,13 @@ function AppContent() {
                 <li onClick={() => handleNav("/home")}><HomeIcon size={16} /> Home</li>
                 <li onClick={() => handleNav("/submit")}><FilePlus size={16} /> Submit Data</li>
                 <li onClick={() => handleNav("/view")}><Eye size={16} /> View Data</li>
+                <li onClick={() => handleNav("/profile")}><User size={16} /> Profiles</li>
+                <li onClick={() => handleNav("/growth")}><TrendingUp size={16} /> Growth</li>
+                <li onClick={() => handleNav("/vitals")}><Activity size={16} /> Vitals</li>
+                <li onClick={() => handleNav("/diet-mental")}><Heart size={16} /> Diet & Mental</li>
+                <li onClick={() => handleNav("/appointments")}><Calendar size={16} /> Appointments</li>
+                <li onClick={() => handleNav("/documents")}><Folder size={16} /> Documents</li>
+                <li onClick={() => handleNav("/teleconsult")}><Video size={16} /> Teleconsultation</li>
                 <li onClick={() => handleNav("/medical-history")}><FileText size={16} /> Medical History</li>
                 <li onClick={() => handleNav("/about")}><Info size={16} /> About Us</li>
                 <li onClick={() => handleNav("/terms")}><FileLock size={16} /> Terms & Conditions</li>
@@ -154,6 +175,13 @@ function AppContent() {
         <Route path="/symptom-checker" element={<ProtectedRoute><SymptomChecker /></ProtectedRoute>} />
         <Route path="/health-chatbot" element={<ProtectedRoute><HealthChatbot /></ProtectedRoute>} />
         <Route path="/note-summarizer" element={<ProtectedRoute><NoteSummarizer /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/growth" element={<ProtectedRoute><GrowthTracker /></ProtectedRoute>} />
+        <Route path="/vitals" element={<ProtectedRoute><VitalsMonitoring /></ProtectedRoute>} />
+        <Route path="/diet-mental" element={<ProtectedRoute><DietMentalHealth /></ProtectedRoute>} />
+        <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
+        <Route path="/documents" element={<ProtectedRoute><DocumentVault /></ProtectedRoute>} />
+        <Route path="/teleconsult" element={<ProtectedRoute><Teleconsultation /></ProtectedRoute>} />
       </Routes>
 
       <footer>

@@ -18,21 +18,22 @@ const getHeaders = () => {
 };
 
 /**
- * Login user with username and password
+ * Login user with username, password and role
  * @param {string} username - The username
  * @param {string} password - The password
+ * @param {string} role - The user role (patient, doctor, hospital)
  * @returns {Promise} - Promise with the login response
  */
-export const loginUser = async (username, password) => {
-  if (!username || !password) {
-    throw new Error('Username and password are required');
+export const loginUser = async (username, password, role) => {
+  if (!username || !password || !role) {
+    throw new Error('Username, password and role are required');
   }
   
   try {
     const response = await fetch(`${API_URL}/api/auth/login`, {
       method: 'POST',
       headers: getHeaders(),
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ username, password, role }),
     });
     
     const data = await response.json();
@@ -45,6 +46,9 @@ export const loginUser = async (username, password) => {
     if (data.access_token) {
       localStorage.setItem('token', data.access_token);
       localStorage.setItem('userId', data.username || data.user_id);
+      if (data.role) {
+        localStorage.setItem('role', data.role);
+      }
     }
     
     return data;
@@ -56,12 +60,12 @@ export const loginUser = async (username, password) => {
 
 /**
  * Register a new user
- * @param {Object} userData - User registration data
+ * @param {Object} userData - User registration data including role
  * @returns {Promise} - Promise with the registration response
  */
 export const registerUser = async (userData) => {
-  if (!userData.username || !userData.password) {
-    throw new Error('Username and password are required');
+  if (!userData.username || !userData.password || !userData.role) {
+    throw new Error('Username, password and role are required');
   }
   
   try {
@@ -108,4 +112,12 @@ export const isAuthenticated = () => {
  */
 export const getCurrentUserId = () => {
   return localStorage.getItem('userId');
+};
+
+/**
+ * Get the current user's role
+ * @returns {string|null} - User role if stored, null otherwise
+ */
+export const getCurrentUserRole = () => {
+  return localStorage.getItem('role');
 };
