@@ -2,81 +2,85 @@ import React, { useState } from "react";
 import styles from "../styles/SymptomChecker.module.css";
 import { extractTextFromImage } from "../utils/ocr";
 
+const API_BASE = process.env.REACT_APP_API_BASE || ""; // "" in dev with CRA proxy
+
 export default function SymptomChecker() {
   const [input, setInput] = useState("");
   const [response, setResponse] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  // const [uploadedFiles, setUploadedFiles] = useState([]); // Currently unused
   const [language, setLanguage] = useState("English");
   const [region, setRegion] = useState("United States - USD");
 
-  // Voice input
+  async function readJson(res) {
+    const ct = res.headers.get("content-type") || "";
+    if (!ct.includes("application/json")) {
+      const txt = await res.text();
+      throw new Error(`Expected JSON, got ${ct || "unknown"}: ${txt.slice(0, 200)}…`);
+    }
+    return res.json();
+  }
+
+  // voice input (kept, with safer fallback)
   const handleVoiceInput = () => {
-    if (!("webkitSpeechRecognition" in window)) {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
       alert("Voice recognition not supported.");
       return;
     }
-    const recognition = new window.webkitSpeechRecognition();
-    recognition.lang = "en-US";
-    recognition.start();
-    recognition.onresult = (e) => {
-      setInput(e.results[0][0].transcript);
+    const rec = new SR();
+    rec.lang = "en-US";
+    rec.continuous = false;
+    rec.interimResults = false;
+    rec.onresult = (e) => setInput(e.results?.[0]?.[0]?.transcript || "");
+    rec.onerror = (e) => {
+      console.warn("Speech error:", e.error);
+      setError(
+        e.error === "not-allowed"
+          ? "Microphone permission denied."
+          : e.error === "no-speech"
+          ? "No speech detected."
+          : "Speech recognition failed."
+      );
     };
+    rec.start();
   };
 
-  // Speak response
   const speakResponse = (text) => {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
-    speechSynthesis.speak(utterance);
+    try {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "en-US";
+      window.speechSynthesis.speak(u);
+    } catch {}
   };
 
-  // Submit to OpenAI
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
-    setResponse("");
+    setError(""); setResponse("");
 
     try {
-      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      const res = await fetch(`${API_BASE}/api/ai/symptom-check`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4",
-          messages: [
-            {
-              role: "system",
-              content: "You are an AI medical assistant that suggests possible causes of symptoms.",
-            },
-            { role: "user", content: input },
-          ],
-        }),
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({ prompt: input, ocr_language: language, region_currency: region }),
       });
+      const data = await readJson(res);
+      if (!res.ok) throw new Error(data.error || "API request failed");
 
-      if (!res.ok) throw new Error("API request failed");
-
-      const data = await res.json();
-      const text = data.choices[0].message.content;
-      setResponse(text);
-      speakResponse(text);
+      setResponse(data.summary || "");
+      speakResponse(data.summary || "");
     } catch (err) {
       console.error(err);
-      setError("Failed to analyze. Please try again.");
+      setError(err.message || "Failed to analyze. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Process uploaded files
+  // Client-side OCR helper (kept) – appends recognized text to the input
   const handleFileUpload = async (e) => {
-    const files = Array.from(e.target.files);
-    // setUploadedFiles(files); // Uncomment if you plan to display the files
-
+    const files = Array.from(e.target.files || []);
     let allText = "";
     for (const file of files) {
       try {
@@ -87,32 +91,26 @@ export default function SymptomChecker() {
         allText += `\n[File: ${file.name}] OCR failed.\n`;
       }
     }
-    setInput((prev) => prev + "\n" + allText);
+    if (allText) setInput((prev) => (prev ? prev + "\n" : "") + allText);
   };
 
-  // Email sharing
+  // share helpers (kept)
   const handleEmail = () => {
     if (!response) return;
     const subject = encodeURIComponent("Symptom Analysis Report");
     const body = encodeURIComponent(response);
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };
-
-  // WhatsApp sharing
   const handleWhatsApp = () => {
     if (!response) return;
     const message = encodeURIComponent(response);
     window.open(`https://wa.me/?text=${message}`, "_blank");
   };
-
-  // SMS sharing
   const handleSMS = () => {
     if (!response) return;
     const message = encodeURIComponent(response);
     window.location.href = `sms:?body=${message}`;
   };
-
-  // Download text file
   const handleDownload = () => {
     if (!response) return;
     const blob = new Blob([response], { type: "text/plain" });
@@ -124,18 +122,12 @@ export default function SymptomChecker() {
     link.click();
     document.body.removeChild(link);
   };
-
-  // Save to local storage
   const handleSaveToDocs = () => {
     if (!response) return;
     const title = prompt("Enter a title for this report:");
     if (!title) return;
-    const saved = JSON.parse(localStorage.getItem("savedSymptomReports")) || [];
-    saved.push({
-      title,
-      text: response,
-      date: new Date().toISOString(),
-    });
+    const saved = JSON.parse(localStorage.getItem("savedSymptomReports") || "[]");
+    saved.push({ title, text: response, date: new Date().toISOString() });
     localStorage.setItem("savedSymptomReports", JSON.stringify(saved));
     alert("Report saved successfully!");
   };
@@ -178,18 +170,10 @@ export default function SymptomChecker() {
         />
 
         <div className={styles.buttons}>
-          <button
-            type="submit"
-            disabled={loading}
-            className={styles.button}
-          >
+          <button type="submit" disabled={loading} className={styles.button}>
             {loading ? "Analyzing..." : "Analyze"}
           </button>
-          <button
-            type="button"
-            onClick={handleVoiceInput}
-            className={styles.voiceButton}
-          >
+          <button type="button" onClick={handleVoiceInput} className={styles.voiceButton}>
             🎤 Voice Input
           </button>
         </div>
@@ -197,12 +181,7 @@ export default function SymptomChecker() {
         <div className={styles.fileUpload}>
           <label>
             Upload Files (PDFs, Images, Videos):
-            <input
-              type="file"
-              accept=".pdf,image/*,video/*"
-              multiple
-              onChange={handleFileUpload}
-            />
+            <input type="file" accept=".pdf,image/*,video/*" multiple onChange={handleFileUpload} />
           </label>
         </div>
       </form>

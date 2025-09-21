@@ -1,0 +1,126 @@
+/* Layout */
+.ai-page {
+  display: flex;
+  justify-content: center;
+  padding: 32px 16px;
+  background: #f7f8fb;
+}
+.ai-card {
+  width: 100%;
+  max-width: 980px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(16,24,40,0.08);
+  padding: 24px;
+}
+.ai-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ai-icon {
+  font-size: 24px;
+}
+.ai-muted {
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+/* Form grid */
+.ai-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+@media (max-width: 900px) {
+  .ai-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+@media (max-width: 560px) {
+  .ai-grid { grid-template-columns: 1fr; }
+}
+.ai-field label {
+  display: block;
+  font-size: 13px;
+  color: #374151;
+  margin-bottom: 6px;
+}
+.ai-field select,
+.ai-field input[type="number"] {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 12px;
+  outline: none;
+  background: #fff;
+}
+.ai-textarea textarea {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-top: 12px;
+  outline: none;
+  background: #fff;
+}
+
+/* Actions */
+.ai-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 12px;
+}
+.btn {
+  appearance: none;
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.05s ease, box-shadow 0.2s ease;
+}
+.btn.primary {
+  background: #2563eb;
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(37,99,235,0.25);
+}
+.btn.primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+.btn.secondary {
+  background: #f3f4f6;
+  color: #111827;
+}
+.btn:hover { transform: translateY(-1px); }
+
+/* Hide real file input inside label button */
+#fileUpload { display: none; }
+
+/* Result & errors */
+.ai-error {
+  margin-top: 14px;
+  color: #b91c1c;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.ai-result {
+  margin-top: 14px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.ai-result pre {
+  white-space: pre-wrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  margin: 0;
+}
+.ai-disclaimer {
+  color: #6b7280;
+  font-size: 12px;
+  margin-top: 12px;
+}

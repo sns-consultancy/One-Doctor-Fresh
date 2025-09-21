@@ -2,14 +2,16 @@ import React, { useState } from "react";
 import styles from "../styles/AiHistory.module.css";
 import { extractTextFromFile } from "../utils/extractText";
 
+const API_BASE = process.env.REACT_APP_API_BASE || ""; // "" in dev if using CRA proxy
+
 export default function AiHistory() {
   const [input, setInput] = useState("");
-  const [response, setResponse] = useState("");
+  const [response, setResponse] = useState("");     // pretty JSON string
+  const [extracted, setExtracted] = useState("");   // OCR/text preview
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState("eng");
   const [isRecording, setIsRecording] = useState(false);
-  const [textOutput, setTextOutput] = useState("");
 
   const languageMap = {
     eng: "en-US",
@@ -19,136 +21,176 @@ export default function AiHistory() {
     fra: "fr-FR",
   };
 
-  // Voice input
+  // ---- utils ----
+  async function readJson(res) {
+    const ct = res.headers.get("content-type") || "";
+    if (!ct.includes("application/json")) {
+      const txt = await res.text();
+      throw new Error(`Expected JSON, got ${ct || "unknown"}: ${txt.slice(0, 200)}…`);
+    }
+    return res.json();
+  }
+
+  const speak = (text) => {
+    try {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = languageMap[selectedLanguage] || "en-US";
+      window.speechSynthesis.speak(u);
+    } catch {}
+  };
+
+  // ---- voice input (kept, with broader browser support) ----
   const handleVoiceInput = () => {
-    if (!("webkitSpeechRecognition" in window)) {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
       alert("Voice recognition not supported in this browser.");
       return;
     }
+    const rec = new SR();
+    rec.lang = languageMap[selectedLanguage] || "en-US";
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
 
-    const recognition = new window.webkitSpeechRecognition();
-    recognition.lang = languageMap[selectedLanguage] || "en-US";
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    recognition.onstart = () => setIsRecording(true);
-    recognition.onend = () => setIsRecording(false);
-    recognition.onerror = (e) => {
+    rec.onstart = () => setIsRecording(true);
+    rec.onend = () => setIsRecording(false);
+    rec.onerror = (e) => {
       console.error("Speech recognition error:", e);
       setIsRecording(false);
       alert("Voice input failed. Please try again.");
     };
-    recognition.onresult = (e) => {
-      const transcript = e.results[0][0].transcript;
-      setInput(transcript);
+    rec.onresult = (e) => {
+      const transcript = e.results?.[0]?.[0]?.transcript || "";
+      setInput((prev) => (prev ? prev + " " : "") + transcript);
       setIsRecording(false);
     };
-
-    recognition.start();
+    rec.start();
   };
 
-  // Text-to-speech
-  const speakResponse = (text) => {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = languageMap[selectedLanguage] || "en-US";
-    speechSynthesis.speak(utterance);
-  };
-
-  // Submit to OpenAI
+  // ---- text submit to backend ----
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(""); setResponse(""); setExtracted("");
+    if (!input.trim()) { setError("Please enter medical history text."); return; }
+
     setLoading(true);
-    setError("");
-    setResponse("");
-
     try {
-      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      const res = await fetch(`${API_BASE}/api/ai/medical-history`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4",
-          messages: [
-            {
-              role: "system",
-              content: `You are an AI assistant that explains and summarizes medical history. Translate the result into the user's selected language: ${selectedLanguage}.`,
-            },
-            { role: "user", content: input },
-          ],
-        }),
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({ text: input }),
       });
+      const data = await readJson(res);
+      if (!res.ok) throw new Error(data.error || "Request failed.");
 
-      if (!res.ok) throw new Error("API request failed.");
-
-      const data = await res.json();
-      const text = data.choices[0].message.content;
-      setResponse(text);
-      speakResponse(text);
+      setResponse(JSON.stringify(data, null, 2));
+      speak("Your medical history summary is ready.");
     } catch (err) {
-      setError("Failed to process request. Please try again.");
-      console.error(err);
+      setError(err.message || "Failed to analyze.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Process file uploads
+  // ---- file upload: try server OCR+parse, fall back to local extract + server parse ----
   const handleFileUpload = async (e) => {
-    const files = Array.from(e.target.files);
-    let allText = "";
-    for (const file of files) {
-      try {
-        const text = await extractTextFromFile(file, selectedLanguage);
-        allText += `\n[File: ${file.name}]\n${text}\n`;
-      } catch (err) {
-        console.error(`Error reading ${file.name}:`, err);
-        allText += `\n[File: ${file.name}] Text extraction failed: ${err.message}\n`;
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    setError(""); setResponse(""); setExtracted("");
+    setLoading(true);
+
+    const extractedChunks = [];
+    const structuredList = [];
+
+    try {
+      for (const file of files) {
+        // 1) try server-side OCR+parse
+        try {
+          const fd = new FormData();
+          fd.append("file", file);
+          const up = await fetch(`${API_BASE}/api/ai/medical-history/upload`, {
+            method: "POST",
+            body: fd,
+          });
+          const data = await readJson(up);
+          if (!up.ok) throw new Error(data.error || "Upload failed.");
+
+          if (data.extracted_text) extractedChunks.push(`[${file.name}]\n${data.extracted_text}`);
+          const { extracted_text, ...structured } = data;
+          structuredList.push(structured);
+          continue; // next file
+        } catch (serverErr) {
+          console.warn("Server upload failed, falling back to client OCR:", serverErr);
+        }
+
+        // 2) client fallback: extract text locally, then ask backend to structure it
+        try {
+          const localText = await extractTextFromFile(file, selectedLanguage);
+          if (localText?.trim()) {
+            extractedChunks.push(`[${file.name}] (local OCR)\n${localText}`);
+            const res = await fetch(`${API_BASE}/api/ai/medical-history`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Accept": "application/json" },
+              body: JSON.stringify({ text: localText }),
+            });
+            const data = await readJson(res);
+            if (!res.ok) throw new Error(data.error || "Parse failed.");
+            structuredList.push(data);
+          } else {
+            extractedChunks.push(`[${file.name}] Could not extract text.`);
+          }
+        } catch (localErr) {
+          extractedChunks.push(`[${file.name}] Text extraction failed: ${localErr.message}`);
+        }
       }
+
+      if (extractedChunks.length) {
+        setExtracted(extractedChunks.join("\n\n"));
+        // also append to input so the user can edit/submit if they want
+        setInput((prev) => (prev ? prev + "\n\n" : "") + extractedChunks.join("\n\n"));
+      }
+
+      if (structuredList.length) {
+        const out = structuredList.length === 1 ? structuredList[0] : structuredList;
+        setResponse(JSON.stringify(out, null, 2));
+      } else {
+        setResponse("");
+      }
+    } catch (err) {
+      setError(err.message || "Failed to process file(s).");
+    } finally {
+      setLoading(false);
+      e.target.value = ""; // reset chooser
     }
-    setInput((prev) => prev + "\n" + allText);
-    setTextOutput(allText);
   };
 
+  // ---- share helpers (kept) ----
   const handleEmail = (text) => {
     const subject = encodeURIComponent("My Medical History Summary");
     const body = encodeURIComponent(text);
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };
-
   const handleWhatsApp = (text) => {
     const message = encodeURIComponent(text);
     window.open(`https://wa.me/?text=${message}`, "_blank");
   };
-
   const handleSMS = (text) => {
     const message = encodeURIComponent(text);
     window.location.href = `sms:?body=${message}`;
   };
-
   const handleDownload = (text) => {
-    const blob = new Blob([text], { type: "text/plain" });
+    const blob = new Blob([text], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "medical_summary.txt";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const a = document.createElement("a");
+    a.href = url; a.download = "medical_history.json"; a.click();
+    URL.revokeObjectURL(url);
   };
-
   const handleSaveToDocs = () => {
-    const title = prompt("Enter a title for this document:");
+    if (!response) return;
+    const title = prompt("Document title:");
     if (!title) return;
-
-    const saved = JSON.parse(localStorage.getItem("savedDocuments")) || [];
-    saved.push({
-      title,
-      text: response,
-      date: new Date().toISOString(),
-    });
-
+    const saved = JSON.parse(localStorage.getItem("savedDocuments") || "[]");
+    saved.push({ title, text: response, date: new Date().toISOString() });
     localStorage.setItem("savedDocuments", JSON.stringify(saved));
     alert("Document saved successfully!");
   };
@@ -187,6 +229,10 @@ export default function AiHistory() {
           <button type="submit" disabled={loading} className={styles.button}>
             {loading ? "Analyzing..." : "Analyze"}
           </button>
+          <label className={styles.button} style={{ cursor: "pointer" }}>
+            📄 Upload PDF/Image
+            <input type="file" accept=".pdf,image/*" multiple onChange={handleFileUpload} style={{ display: "none" }} />
+          </label>
           <button
             type="button"
             onClick={handleVoiceInput}
@@ -197,65 +243,23 @@ export default function AiHistory() {
         </div>
       </form>
 
-      <div className={styles.fileUpload}>
-        <label>
-          Upload Files:
-          <input
-            type="file"
-            accept=".pdf,image/*"
-            multiple
-            onChange={handleFileUpload}
-          />
-        </label>
-      </div>
-
-      {textOutput && (
+      {extracted && (
         <div className={styles.responseBox}>
-          <strong>Extracted Text:</strong>
-          <pre>{textOutput}</pre>
+          <strong>Extracted Text (preview):</strong>
+          <pre>{extracted}</pre>
         </div>
       )}
 
       {response && (
         <div className={styles.responseBox}>
-          <strong>AI Insights:</strong>
-          <p>{response}</p>
+          <strong>Structured History (JSON):</strong>
+          <pre>{response}</pre>
           <div className={styles.actionButtons}>
-            <button
-              type="button"
-              onClick={() => handleEmail(response)}
-              className={styles.button}
-            >
-              📧 Email
-            </button>
-            <button
-              type="button"
-              onClick={() => handleWhatsApp(response)}
-              className={styles.button}
-            >
-              💬 WhatsApp
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSMS(response)}
-              className={styles.button}
-            >
-              📱 SMS
-            </button>
-            <button
-              type="button"
-              onClick={() => handleDownload(response)}
-              className={styles.button}
-            >
-              📂 Download
-            </button>
-            <button
-              type="button"
-              onClick={handleSaveToDocs}
-              className={styles.button}
-            >
-              💾 Save
-            </button>
+            <button type="button" onClick={() => handleEmail(response)} className={styles.button}>📧 Email</button>
+            <button type="button" onClick={() => handleWhatsApp(response)} className={styles.button}>💬 WhatsApp</button>
+            <button type="button" onClick={() => handleSMS(response)} className={styles.button}>📱 SMS</button>
+            <button type="button" onClick={() => handleDownload(response)} className={styles.button}>⬇️ Download</button>
+            <button type="button" onClick={handleSaveToDocs} className={styles.button}>💾 Save</button>
           </div>
         </div>
       )}

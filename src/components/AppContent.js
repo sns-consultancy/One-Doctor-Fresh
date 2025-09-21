@@ -106,7 +106,7 @@ function AppContent() {
       {!hideNav && (
         <nav className="navbar">
           <div className="nav-left">
-            <Logo />
+            <Logo className="h-8 w-8" />
           </div>
 
           <div className="nav-right">

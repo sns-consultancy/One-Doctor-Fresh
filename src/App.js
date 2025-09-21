@@ -14,7 +14,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 
 // Components
-import Logo from "./components/Logo";
+import logoUrl from "./assets/logo.png";
 import ProtectedRoute from "./components/ProtectedRoute";
 import CookieConsent from "./components/CookieConsent";
 
@@ -107,7 +107,19 @@ function AppContent() {
       {!hideNav && (
         <nav className="navbar">
           <div className="nav-left">
-            <Logo />
+            <img
+    src={logoUrl}
+    alt="One Doctor Logo"
+    style={{
+      height: 64, // bigger size
+      width: "auto",
+      display: "block",
+      filter: "brightness(0) saturate(100%) invert(100%)", // turns logo white
+    }}
+  />
+  <span style={{ color: "#fff", fontSize: "20px", fontWeight: "bold" }}>
+    One Doctor
+  </span>
           </div>
           <div className="nav-right">
             {/* Main Menu */}
