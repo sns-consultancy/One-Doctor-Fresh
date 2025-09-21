@@ -1,0 +1,7 @@
+[
+  { "symptom": "Fever", "description": "Elevated body temperature, chills, sweating." },
+  { "symptom": "Cough", "description": "Dry or productive cough, irritation in throat." },
+  { "symptom": "Shortness of Breath", "description": "Difficulty breathing or feeling of tightness." },
+  { "symptom": "Fatigue", "description": "Unusual tiredness, lack of energy." },
+  { "symptom": "Headache", "description": "Persistent pain in head or neck region." }
+]
