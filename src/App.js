@@ -11,7 +11,7 @@ import { Menu, Brain, Moon, Sun } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import "./App.css";
+import "./index.css";
 
 // Components
 import logoUrl from "./assets/logo.png";
@@ -23,6 +23,7 @@ import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Home from "./pages/Home";
+import NotFound from "./pages/NotFound.jsx";
 import SubmitHealthData from "./pages/SubmitHealthData";
 import ViewHealthData from "./pages/ViewHealthData";
 import MedicalHistory from "./pages/MedicalHistory";
@@ -257,7 +258,10 @@ function AppContent() {
 export default function App() {
   return (
     <Router>
+      <Route path="/" element={<Home />} />
+      {/* add routes here */}
       <AppContent />
+      <Route path="*" element={<NotFound />} />
     </Router>
   );
 }
