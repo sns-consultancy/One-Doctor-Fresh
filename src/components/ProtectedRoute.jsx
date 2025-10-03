@@ -1,22 +1,21 @@
-import { Navigate, Outlet } from "react-router-dom";
+// src/components/ProtectedRoute.jsx
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 
-export default function ProtectedRoute() {
-  const isAuthed = !!localStorage.getItem("auth_token"); // swap for your real auth check
-  return isAuthed ? <Outlet /> : <Navigate to="/login" replace />;
-}
-import { Navigate } from 'react-router-dom';
+export default function ProtectedRoute({
+  isAllowed,                  // optional override boolean
+  redirectTo = "/login",
+  children,
+}) {
+  const location = useLocation();
 
-function ProtectedRoute({ children }) {
-  const token = localStorage.getItem('token');
+  // Default check: token in localStorage
+  const allowed =
+    typeof isAllowed === "boolean"
+      ? isAllowed
+      : !!localStorage.getItem("authToken") || !!localStorage.getItem("token");
 
-  if (token === "loggedin") {
-    return children;
+  if (!allowed) {
+    return <Navigate to={redirectTo} replace state={{ from: location }} />;
   }
-
-  // Invalid or missing token - cleanup and redirect
-  localStorage.removeItem('token');
-  localStorage.removeItem('userId');
-  return <Navigate to="/login" replace />;
+  return children ?? <Outlet />;
 }
-
-
