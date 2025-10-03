@@ -234,6 +234,7 @@ function AppContent() {
         <Route path="/app-selector" element={<AppSelector />} />
         <Route path="/find-doctors" element={<FindDoctors />} />
         <Route path="/chat" element={<AIChatbot />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
 
       {!hideNav && (
