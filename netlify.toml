@@ -1,4 +1,13 @@
+# netlify.toml — Vite app at repo root
 [build]
-  base = "client"
-  command = "npm run build"
-  publish = "client/dist"
+command = "npm ci && npm run build"
+publish = "dist"
+
+[build.environment]
+NODE_VERSION = "20"
+
+# SPA fallback
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
