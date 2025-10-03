@@ -30,7 +30,7 @@ import MedicalHistory from "./pages/MedicalHistory.jsx";
 import SymptomChecker from "./pages/SymptomChecker.jsx";
 import HealthChatbot from "./pages/HealthChatbot.jsx";
 import NoteSummarizer from "./pages/NoteSummarizer.jsx";
-import AiHistory from "./pages/AiHistory";
+import AIHistory from "./pages/AIHistory.jsx";
 import About from "./pages/About.jsx";
 import Contact from "./pages/Contact.jsx";
 import Pricing from "./pages/Pricing.jsx";
@@ -185,7 +185,7 @@ function AppContent() {
                     <Link to="/symptom-checker" onClick={() => setAiMenuOpen(false)}>Symptom Checker</Link>
                     <Link to="/health-chatbot" onClick={() => setAiMenuOpen(false)}>Health Chatbot</Link>
                     <Link to="/note-summarizer" onClick={() => setAiMenuOpen(false)}>Note Summarizer</Link>
-                    <Link to="/ai-history" onClick={() => setAiMenuOpen(false)}>AI Medical History</Link>
+                    <Link to="/AIHistory" onClick={() => setAiMenuOpen(false)}>AI Medical History</Link>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -220,7 +220,7 @@ function AppContent() {
         <Route path="/symptom-checker" element={<ProtectedRoute><SymptomChecker /></ProtectedRoute>} />
         <Route path="/health-chatbot" element={<ProtectedRoute><HealthChatbot /></ProtectedRoute>} />
         <Route path="/note-summarizer" element={<ProtectedRoute><NoteSummarizer /></ProtectedRoute>} />
-        <Route path="/ai-history" element={<ProtectedRoute><AiHistory /></ProtectedRoute>} />
+        <Route path="/Aihistory" element={<ProtectedRoute><AiHistory /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/billing-history" element={<BillingHistory />} />
         <Route path="/pricing" element={<Pricing />} />
