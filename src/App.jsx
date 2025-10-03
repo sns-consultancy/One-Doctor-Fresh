@@ -17,6 +17,7 @@ import "./index.css";
 import logoUrl from "./logo.svg";
 import ProtectedRoute from "./components/ProtectedRoute";
 import CookieConsent from "./components/CookieConsent";
+import AIChatbot from "./components/AIChatbot";
 
 // Pages
 import Landing from "./pages/Landing.jsx";
@@ -30,7 +31,7 @@ import MedicalHistory from "./pages/MedicalHistory.jsx";
 import SymptomChecker from "./pages/SymptomChecker.jsx";
 import HealthChatbot from "./pages/HealthChatbot.jsx";
 import NoteSummarizer from "./pages/NoteSummarizer.jsx";
-import AIHistory from "./pages/AIHistory.jsx";
+import AiHistory from "./pages/AiHistory.jsx"; // ✅ exact casing
 import About from "./pages/About.jsx";
 import Contact from "./pages/Contact.jsx";
 import Pricing from "./pages/Pricing.jsx";
@@ -43,7 +44,6 @@ import Disclaimer from "./pages/Disclaimer.jsx";
 import CookiePolicy from "./pages/CookiePolicy.jsx";
 import AppSelector from "./pages/AppSelector.jsx";
 import FindDoctors from "./pages/FindDoctors.jsx";
-import AIChatbot from "./components/AIChatbot";
 
 function AppContent() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -59,12 +59,8 @@ function AppContent() {
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setMenuOpen(false);
-      }
-      if (aiMenuRef.current && !aiMenuRef.current.contains(e.target)) {
-        setAiMenuOpen(false);
-      }
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+      if (aiMenuRef.current && !aiMenuRef.current.contains(e.target)) setAiMenuOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -84,11 +80,8 @@ function AppContent() {
         }),
       });
       const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        toast.error("Checkout session could not be created.");
-      }
+      if (data?.url) window.location.href = data.url;
+      else toast.error("Checkout session could not be created.");
     } catch (err) {
       console.error("Checkout error", err);
       toast.error("Could not start checkout.");
@@ -101,6 +94,7 @@ function AppContent() {
     navigate("/login");
   };
 
+  // Hide navbar on these routes
   const hideNav = ["/", "/login", "/signup"].includes(location.pathname);
 
   return (
@@ -109,19 +103,20 @@ function AppContent() {
         <nav className="navbar">
           <div className="nav-left">
             <img
-    src={logoUrl}
-    alt="One Doctor Logo"
-    style={{
-      height: 64, // bigger size
-      width: "auto",
-      display: "block",
-      filter: "brightness(0) saturate(100%) invert(100%)", // turns logo white
-    }}
-  />
-  <span style={{ color: "#fff", fontSize: "20px", fontWeight: "bold" }}>
-    One Doctor
-  </span>
+              src={logoUrl}
+              alt="One Doctor Logo"
+              style={{
+                height: 64,
+                width: "auto",
+                display: "block",
+                filter: "brightness(0) saturate(100%) invert(100%)",
+              }}
+            />
+            <span style={{ color: "#fff", fontSize: "20px", fontWeight: "bold" }}>
+              One Doctor
+            </span>
           </div>
+
           <div className="nav-right">
             {/* Main Menu */}
             <div className="dropdown" ref={menuRef}>
@@ -152,10 +147,7 @@ function AppContent() {
                     <Link to="/pricing" onClick={() => setMenuOpen(false)}>Pricing</Link>
                     <Link to="/terms" onClick={() => setMenuOpen(false)}>Terms</Link>
                     <button
-                      onClick={() => {
-                        handleLogout();
-                        setMenuOpen(false);
-                      }}
+                      onClick={() => { handleLogout(); setMenuOpen(false); }}
                       className="logout-button"
                     >
                       Logout
@@ -182,27 +174,33 @@ function AppContent() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                   >
-                    <Link to="/symptom-checker" onClick={() => setAiMenuOpen(false)}>Symptom Checker</Link>
-                    <Link to="/health-chatbot" onClick={() => setAiMenuOpen(false)}>Health Chatbot</Link>
-                    <Link to="/note-summarizer" onClick={() => setAiMenuOpen(false)}>Note Summarizer</Link>
-                    <Link to="/AIHistory" onClick={() => setAiMenuOpen(false)}>AI Medical History</Link>
+                    <Link to="/symptom-checker" onClick={() => setAiMenuOpen(false)}>
+                      Symptom Checker
+                    </Link>
+                    <Link to="/health-chatbot" onClick={() => setAiMenuOpen(false)}>
+                      Health Chatbot
+                    </Link>
+                    <Link to="/note-summarizer" onClick={() => setAiMenuOpen(false)}>
+                      Note Summarizer
+                    </Link>
+                    {/* ✅ unified, lowercase slug to avoid case issues */}
+                    <Link to="/ai-history" onClick={() => setAiMenuOpen(false)}>
+                      AI Medical History
+                    </Link>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
 
             <button
-              onClick={toggleDarkMode}
+              onClick={() => setDarkMode((d) => !d)}
               className="theme-toggle"
               aria-label="Toggle dark mode"
             >
               {darkMode ? <Sun size={18} /> : <Moon size={18} />}
             </button>
 
-            <button
-              onClick={handleUpgrade}
-              className="upgrade-button"
-            >
+            <button onClick={handleUpgrade} className="upgrade-button">
               Upgrade
             </button>
           </div>
@@ -210,9 +208,12 @@ function AppContent() {
       )}
 
       <Routes>
+        {/* Public */}
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+
+        {/* Protected */}
         <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
         <Route path="/submit" element={<ProtectedRoute><SubmitHealthData /></ProtectedRoute>} />
         <Route path="/view" element={<ProtectedRoute><ViewHealthData /></ProtectedRoute>} />
@@ -220,8 +221,10 @@ function AppContent() {
         <Route path="/symptom-checker" element={<ProtectedRoute><SymptomChecker /></ProtectedRoute>} />
         <Route path="/health-chatbot" element={<ProtectedRoute><HealthChatbot /></ProtectedRoute>} />
         <Route path="/note-summarizer" element={<ProtectedRoute><NoteSummarizer /></ProtectedRoute>} />
-        <Route path="/Aihistory" element={<ProtectedRoute><AiHistory /></ProtectedRoute>} />
+        <Route path="/ai-history" element={<ProtectedRoute><AiHistory /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+
+        {/* Public misc */}
         <Route path="/billing-history" element={<BillingHistory />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/about" element={<About />} />
@@ -234,6 +237,8 @@ function AppContent() {
         <Route path="/app-selector" element={<AppSelector />} />
         <Route path="/find-doctors" element={<FindDoctors />} />
         <Route path="/chat" element={<AIChatbot />} />
+
+        {/* 404 */}
         <Route path="*" element={<NotFound />} />
       </Routes>
 
@@ -259,10 +264,7 @@ function AppContent() {
 export default function App() {
   return (
     <Router>
-      <Route path="/" element={<Home />} />
-      {/* add routes here */}
       <AppContent />
-      <Route path="*" element={<NotFound />} />
     </Router>
   );
 }
