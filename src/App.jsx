@@ -14,7 +14,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "./index.css";
 
 // Components
-import logoUrl from "./assets/logo.png";
+import logoUrl from "./logo.svg";
 import ProtectedRoute from "./components/ProtectedRoute";
 import CookieConsent from "./components/CookieConsent";
 
