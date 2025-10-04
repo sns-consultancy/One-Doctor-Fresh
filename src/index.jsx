@@ -19,6 +19,8 @@ root.render(
 function sendToMetrics(metric) {
   const body = JSON.stringify(metric);
 
+  
+
   if (navigator.sendBeacon) {
     try {
       const blob = new Blob([body], { type: "application/json" });
@@ -26,6 +28,12 @@ function sendToMetrics(metric) {
       return;
     } catch {}
   }
+// index.jsx (or wherever you call sendToMetrics)
+function sendToMetrics(metric) {
+  if (import.meta.env.PROD) return; // skip on Netlify prod
+  const body = JSON.stringify(metric);
+  navigator.sendBeacon?.('/api/metrics', new Blob([body], { type: 'application/json' }));
+}
 
   fetch("/api/metrics", {
     method: "POST",

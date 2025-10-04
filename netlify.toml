@@ -6,8 +6,9 @@ publish = "dist"
 [build.environment]
 NODE_VERSION = "20"
 
-# SPA fallback
+# netlify.toml
 [[redirects]]
-from = "/*"
-to = "/index.html"
-status = 200
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
