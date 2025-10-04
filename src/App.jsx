@@ -1,12 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Link,
-  useNavigate,
-  useLocation,
-} from "react-router-dom";
+import { Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
 import { Menu, Brain, Moon, Sun } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ToastContainer, toast } from "react-toastify";
@@ -262,9 +255,6 @@ function AppContent() {
 }
 
 export default function App() {
-  return (
-    <Router>
-      <AppContent />
-    </Router>
-  );
+  return <AppContent />;
 }
+
