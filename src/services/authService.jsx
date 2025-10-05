@@ -1,9 +1,8 @@
 // src/services/authService.js
 
 const API_BASE =
-  process.env.REACT_APP_API_BASE ||
-  process.env.REACT_APP_API_URL ||        // fallback for your older env name
-  "";
+  (import.meta.env.VITE_API_BASE ? `${import.meta.env.VITE_API_BASE}/api` : "/api");
+
 
 const API_KEY = process.env.REACT_APP_API_KEY;
 
@@ -57,7 +56,7 @@ export async function registerUser(user) {
     password: user.password,
   };
 
-  const data = await request("/api/auth/signup", { method: "POST", body });
+  const data = await request("/auth/signup", { method: "POST", body });
   if (data.token) localStorage.setItem("token", data.token);
   return data;
 }
@@ -74,7 +73,7 @@ export async function loginUser(usernameOrEmail, password) {
     password,
   };
 
-  const data = await request("/api/auth/login", { method: "POST", body });
+  const data = await request("/auth/login", { method: "POST", body });
   if (data.token) localStorage.setItem("token", data.token);
   return data;
 }
