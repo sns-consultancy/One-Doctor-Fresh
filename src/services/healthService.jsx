@@ -1,5 +1,5 @@
-const API_URL = process.env.REACT_APP_API_URL;
-const API_KEY = process.env.REACT_APP_API_KEY;
+const API_BASE = import.meta.env.VITE_API_BASE ? `${import.meta.env.VITE_API_BASE}/api` : "/api";
+const API_KEY  = import.meta.env.VITE_API_KEY;
 
 /**
  * Helper function to get common request headers with auth token

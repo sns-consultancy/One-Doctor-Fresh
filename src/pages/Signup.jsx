@@ -2,21 +2,24 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
-import { registerUser } from "../services/authService";
 import styles from "./Signup.module.css";
 import {
-  User,
-  Mail,
-  Lock,
-  Phone,
-  Calendar,
-  MapPin,
-  Upload,
-  Mic,
-  Fingerprint,
-  Smile,
-  CheckCircle
+  User, Mail, Lock, Phone, Calendar, MapPin, Upload,
+  Mic, Fingerprint, Smile, CheckCircle
 } from "lucide-react";
+
+// Firebase
+import { auth, db, storage } from "../firebase";
+import {
+  createUserWithEmailAndPassword,
+  updateProfile
+} from "firebase/auth";
+import {
+  doc, setDoc, serverTimestamp
+} from "firebase/firestore";
+import {
+  ref, uploadBytes, getDownloadURL
+} from "firebase/storage";
 
 function Signup() {
   const [step, setStep] = useState(1);
@@ -28,7 +31,7 @@ function Signup() {
     country: "",
     password: "",
     confirmPassword: "",
-    profilePhoto: null
+    profilePhoto: null,
   });
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -43,14 +46,19 @@ function Signup() {
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
     if (type === "file") {
-      setFormData((prev) => ({ ...prev, [name]: files[0] }));
-      setPhotoPreview(URL.createObjectURL(files[0]));
+      const file = files[0];
+      setFormData((prev) => ({ ...prev, [name]: file }));
+      setPhotoPreview(file ? URL.createObjectURL(file) : null);
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
   const handleVoiceInput = (field) => {
+    if (!("webkitSpeechRecognition" in window)) {
+      alert("Voice recognition not supported.");
+      return;
+    }
     const recognition = new window.webkitSpeechRecognition();
     recognition.lang = "en-US";
     recognition.start();
@@ -60,13 +68,8 @@ function Signup() {
     };
   };
 
-  const handleFaceId = () => {
-    alert("Face ID simulated. (Use WebAuthn APIs for real biometrics.)");
-  };
-
-  const handleThumbprint = () => {
-    alert("Thumbprint simulated. (Use WebAuthn APIs for real biometrics.)");
-  };
+  const handleFaceId = () => alert("Face ID simulated. (Integrate WebAuthn for real biometrics.)");
+  const handleThumbprint = () => alert("Thumbprint simulated. (Integrate WebAuthn for real biometrics.)");
 
   const handleSubmitDetails = (e) => {
     e.preventDefault();
@@ -86,30 +89,55 @@ function Signup() {
     setStep(2);
   };
 
-  const handleVerifyOtp = () => {
-    if (otp.trim() === "123456") {
-      setStep(3);
-      setMessage("");
-      handleRegister();
-    } else {
+  const handleVerifyOtp = async () => {
+    if (otp.trim() !== "123456") {
       setMessage("Invalid OTP. Try 123456 for demo.");
+      return;
     }
+    setMessage("");
+    setStep(3);
+    await handleRegister();
   };
 
   const handleRegister = async () => {
     try {
       setLoading(true);
-      const payload = new FormData();
-      Object.keys(formData).forEach((key) => {
-        if (formData[key] !== null) payload.append(key, formData[key]);
-      });
-      payload.append("consentGmail", consentGmail);
-      payload.append("consentPhone", consentPhone);
 
-      await registerUser(payload);
+      // 1) Create Firebase Auth user (this generates the UID)
+      const { user } = await createUserWithEmailAndPassword(
+        auth, formData.email, formData.password
+      );
+
+      // 2) Optional: upload profile photo
+      let photoURL = null;
+      if (formData.profilePhoto) {
+        const pRef = ref(storage, `profiles/${user.uid}/${formData.profilePhoto.name}`);
+        await uploadBytes(pRef, formData.profilePhoto);
+        photoURL = await getDownloadURL(pRef);
+      }
+
+      // 3) Update display name / photo
+      await updateProfile(user, {
+        displayName: formData.fullName || user.email,
+        photoURL: photoURL || undefined,
+      });
+
+      // 4) Persist additional fields to Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        fullName: formData.fullName,
+        email: formData.email,
+        dob: formData.dob || null,
+        mobile: formData.mobile || null,
+        country: formData.country || null,
+        photoURL: photoURL || null,
+        consentGmail,
+        consentPhone,
+        createdAt: serverTimestamp(),
+      });
 
       setMessage("Registration successful!");
-      setTimeout(() => navigate("/login"), 2000);
+      setTimeout(() => navigate("/login"), 1200);
     } catch (err) {
       console.error("Registration error:", err);
       setMessage(err.message || "Registration failed.");
@@ -136,11 +164,7 @@ function Signup() {
                 disabled={loading}
                 required
               />
-              <button
-                type="button"
-                onClick={() => handleVoiceInput("fullName")}
-                className={styles.iconButton}
-              >
+              <button type="button" onClick={() => handleVoiceInput("fullName")} className={styles.iconButton}>
                 <Mic size={16} />
               </button>
             </label>
@@ -154,7 +178,6 @@ function Signup() {
                 value={formData.dob}
                 onChange={handleChange}
                 disabled={loading}
-                required
               />
             </label>
 
@@ -168,12 +191,9 @@ function Signup() {
                 value={formData.email}
                 onChange={handleChange}
                 disabled={loading}
+                required
               />
-              <button
-                type="button"
-                onClick={() => handleVoiceInput("email")}
-                className={styles.iconButton}
-              >
+              <button type="button" onClick={() => handleVoiceInput("email")} className={styles.iconButton}>
                 <Mic size={16} />
               </button>
             </label>
@@ -257,14 +277,8 @@ function Signup() {
                 required
               />
               <span>
-                I agree to the{" "}
-                <a href="/terms" target="_blank" rel="noreferrer">
-                  Terms
-                </a>{" "}
-                and{" "}
-                <a href="/privacy" target="_blank" rel="noreferrer">
-                  Privacy Policy
-                </a>.
+                I agree to the <a href="/terms" target="_blank" rel="noreferrer">Terms</a> and{" "}
+                <a href="/privacy" target="_blank" rel="noreferrer">Privacy Policy</a>.
               </span>
             </label>
 
@@ -290,48 +304,35 @@ function Signup() {
 
             {/* Biometric Buttons */}
             <div className={styles.actionsRow}>
-              <button
-                type="button"
-                onClick={handleFaceId}
-                className={styles.secondaryButton}
-              >
+              <button type="button" onClick={handleFaceId} className={styles.secondaryButton}>
                 <Smile size={16} />
                 Face ID
               </button>
-              <button
-                type="button"
-                onClick={handleThumbprint}
-                className={styles.secondaryButton}
-              >
+              <button type="button" onClick={handleThumbprint} className={styles.secondaryButton}>
                 <Fingerprint size={16} />
                 Thumbprint
               </button>
             </div>
 
-            {/* Continue Button */}
             <button className={styles.button} disabled={loading}>
               Continue
             </button>
 
-            {/* Google Sign In */}
+            {/* Google Sign In (prefills; account is created at Login via Google) */}
             <div className={styles.googleButton}>
               <GoogleLogin
                 onSuccess={(credentialResponse) => {
                   if (credentialResponse.credential) {
                     const decoded = jwtDecode(credentialResponse.credential);
-                    console.log("Decoded Google User:", decoded);
                     setFormData((prev) => ({
                       ...prev,
-                      email: decoded.email,
-                      fullName: decoded.name
+                      email: decoded.email || prev.email,
+                      fullName: decoded.name || prev.fullName,
                     }));
-                    alert("Google sign-in successful!");
+                    alert("Google verified – details prefilled.");
                   }
                 }}
-                onError={() => {
-                  console.log("Google Login Failed");
-                  setMessage("Google sign-in failed.");
-                }}
+                onError={() => setMessage("Google verification failed.")}
               />
             </div>
           </form>
@@ -347,11 +348,7 @@ function Signup() {
               onChange={(e) => setOtp(e.target.value)}
               placeholder="Enter OTP (use 123456)"
             />
-            <button
-              onClick={handleVerifyOtp}
-              className={styles.button}
-              disabled={loading}
-            >
+            <button onClick={handleVerifyOtp} className={styles.button} disabled={loading}>
               Verify OTP
             </button>
           </div>
@@ -361,22 +358,17 @@ function Signup() {
         {step === 3 && (
           <div className={styles.success}>
             <CheckCircle size={48} />
-            <p>Account created successfully! Redirecting...</p>
+            <p>Account created successfully! Redirecting…</p>
           </div>
         )}
 
         {/* Message */}
         {message && (
-          <p
-            className={
-              message.includes("successful") ? styles.success : styles.error
-            }
-          >
+          <p className={message.includes("successful") ? styles.success : styles.error}>
             {message}
           </p>
         )}
 
-        {/* Footer */}
         <p className={styles.footer}>
           Already have an account? <Link to="/login">Log in</Link>
         </p>

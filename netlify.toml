@@ -1,4 +1,3 @@
-# netlify.toml — Vite app at repo root
 [build]
 command = "npm ci && npm run build"
 publish = "dist"
@@ -6,9 +5,22 @@ publish = "dist"
 [build.environment]
 NODE_VERSION = "20"
 
-# netlify.toml
+# Metrics function
+[[redirects]]
+  from = "/api/metrics"
+  to   = "/.netlify/functions/metrics"
+  status = 200
+  force  = true
+
+# General API proxy — strip the /api prefix before hitting Render
 [[redirects]]
   from = "/api/*"
-  to = "/.netlify/functions/:splat"
+  to   = "https://one-doctor-service-fresh-ztxv.onrender.com/:splat"
   status = 200
+  force  = true
 
+# SPA fallback LAST
+[[redirects]]
+  from = "/*"
+  to   = "/index.html"
+  status = 200

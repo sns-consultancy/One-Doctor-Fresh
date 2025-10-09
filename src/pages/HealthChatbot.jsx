@@ -2,7 +2,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import styles from "../styles/HealthChatbot.module.css";
 
-const API_BASE = process.env.REACT_APP_API_BASE || "";
+const API_BASE = import.meta.env.VITE_API_BASE ? `${import.meta.env.VITE_API_BASE}/api` : "/api";
+const API_KEY  = import.meta.env.VITE_API_KEY;
 
 export default function HealthChatbot() {
   const [input, setInput] = useState("");

@@ -24,3 +24,6 @@ nav {
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
+.prose h3 { margin: 1rem 0 .5rem; }
+.prose p, .prose li { line-height: 1.6; }
+button { cursor: pointer; }

@@ -1,210 +1,323 @@
-import React, { useState } from "react";
+// src/components/SymptomChecker.jsx
+import React, { useState, useRef } from "react";
+import { callAnalyze } from "../helpers/api";
+// ⬇️ Point to your styles folder (not components)
 import styles from "../styles/SymptomChecker.module.css";
-import { extractTextFromImage } from "../utils/ocr";
-
-const API_BASE = process.env.REACT_APP_API_BASE || ""; // "" in dev with CRA proxy
 
 export default function SymptomChecker() {
-  const [input, setInput] = useState("");
-  const [response, setResponse] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [text, setText] = useState("");
+  const [files, setFiles] = useState([]);
+  const [result, setResult] = useState("");
   const [error, setError] = useState("");
-  const [language, setLanguage] = useState("English");
-  const [region, setRegion] = useState("United States - USD");
+  const [lang, setLang] = useState("en");
+  const [region, setRegion] = useState("US");
+  const [loading, setLoading] = useState(false);
 
-  async function readJson(res) {
-    const ct = res.headers.get("content-type") || "";
-    if (!ct.includes("application/json")) {
-      const txt = await res.text();
-      throw new Error(`Expected JSON, got ${ct || "unknown"}: ${txt.slice(0, 200)}…`);
-    }
-    return res.json();
-  }
+  // NEW: editable text + UI flags (does not remove any existing state)
+  const [analysisText, setAnalysisText] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [showJson, setShowJson] = useState(false);
 
-  // voice input (kept, with safer fallback)
-  const handleVoiceInput = () => {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) {
-      alert("Voice recognition not supported.");
-      return;
-    }
-    const rec = new SR();
-    rec.lang = "en-US";
-    rec.continuous = false;
-    rec.interimResults = false;
-    rec.onresult = (e) => setInput(e.results?.[0]?.[0]?.transcript || "");
-    rec.onerror = (e) => {
-      console.warn("Speech error:", e.error);
-      setError(
-        e.error === "not-allowed"
-          ? "Microphone permission denied."
-          : e.error === "no-speech"
-          ? "No speech detected."
-          : "Speech recognition failed."
-      );
-    };
-    rec.start();
-  };
+  const recRef = useRef(null);
 
-  const speakResponse = (text) => {
+  const handleAnalyze = async () => {
     try {
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = "en-US";
-      window.speechSynthesis.speak(u);
-    } catch {}
-  };
+      setError("");
+      setLoading(true);
+      const res = await callAnalyze({ text, lang, region }, files);
+      setResult(JSON.stringify(res, null, 2));
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(""); setResponse("");
-
-    try {
-      const res = await fetch(`${API_BASE}/api/ai/symptom-check`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Accept": "application/json" },
-        body: JSON.stringify({ prompt: input, ocr_language: language, region_currency: region }),
-      });
-      const data = await readJson(res);
-      if (!res.ok) throw new Error(data.error || "API request failed");
-
-      setResponse(data.summary || "");
-      speakResponse(data.summary || "");
+      // NEW: capture human-readable text (fallbacks preserve behavior)
+      const editable =
+        res?.analysis?.summary ||
+        res?.analysis ||
+        res?.message ||
+        (typeof res === "string" ? res : "");
+      setAnalysisText(editable || "");
+      setIsEditing(false);
     } catch (err) {
-      console.error(err);
-      setError(err.message || "Failed to analyze. Please try again.");
+      setError("Error analyzing symptoms: " + (err?.message || String(err)));
     } finally {
       setLoading(false);
     }
   };
 
-  // Client-side OCR helper (kept) – appends recognized text to the input
-  const handleFileUpload = async (e) => {
-    const files = Array.from(e.target.files || []);
-    let allText = "";
-    for (const file of files) {
-      try {
-        const text = await extractTextFromImage(file);
-        allText += `\n[File: ${file.name}]\n${text}`;
-      } catch (err) {
-        console.error(`OCR failed for ${file.name}:`, err);
-        allText += `\n[File: ${file.name}] OCR failed.\n`;
-      }
-    }
-    if (allText) setInput((prev) => (prev ? prev + "\n" : "") + allText);
+  const handleFilesPicked = (e) => {
+    const picked = Array.from(e.target.files || []);
+    setFiles((prev) => [...prev, ...picked]);
   };
 
-  // share helpers (kept)
-  const handleEmail = () => {
-    if (!response) return;
-    const subject = encodeURIComponent("Symptom Analysis Report");
-    const body = encodeURIComponent(response);
-    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  const handleRemoveFile = (i) => {
+    setFiles((prev) => prev.filter((_, idx) => idx !== i));
   };
-  const handleWhatsApp = () => {
-    if (!response) return;
-    const message = encodeURIComponent(response);
-    window.open(`https://wa.me/?text=${message}`, "_blank");
+
+  const handleVoice = () => {
+    try {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) {
+        setError("Speech recognition not supported in this browser.");
+        return;
+      }
+      const recognition = new SR();
+      recRef.current = recognition;
+      recognition.lang = "en-US";
+      recognition.interimResults = false;
+      recognition.continuous = false;
+      recognition.onresult = (event) => {
+        const heard = event?.results?.[0]?.[0]?.transcript || "";
+        setText((t) => (t ? t + " " + heard : heard));
+      };
+      recognition.onerror = (e) =>
+        setError("Speech error: " + (e?.error || "unknown"));
+      recognition.start();
+    } catch {
+      setError("Unable to start voice input.");
+    }
   };
-  const handleSMS = () => {
-    if (!response) return;
-    const message = encodeURIComponent(response);
-    window.location.href = `sms:?body=${message}`;
+
+  const handleStopVoice = () => {
+    try {
+      recRef.current?.stop?.();
+    } catch {}
   };
+
+  // UPDATED: prefer edited text for speech, fallback to parsed JSON or raw result
+  const speakResult = () => {
+    try {
+      const preferred = (analysisText || "").trim();
+      if (preferred) {
+        const u = new SpeechSynthesisUtterance(preferred);
+        u.lang = "en-US";
+        window.speechSynthesis.speak(u);
+        return;
+      }
+      if (!result) return;
+      const parsed = JSON.parse(result);
+      const textToSpeak =
+        parsed?.analysis?.summary ||
+        parsed?.analysis ||
+        parsed?.message ||
+        (typeof parsed === "string" ? parsed : result);
+      const u = new SpeechSynthesisUtterance(textToSpeak);
+      u.lang = "en-US";
+      window.speechSynthesis.speak(u);
+    } catch {
+      const u = new SpeechSynthesisUtterance(result || "");
+      u.lang = "en-US";
+      window.speechSynthesis.speak(u);
+    }
+  };
+
+  // NEW: utilities for copy & download (work for both text & JSON views)
+  const handleCopy = async () => {
+    const toCopy = showJson ? (result || "") : (analysisText || "");
+    try {
+      await navigator.clipboard.writeText(toCopy);
+    } catch {
+      setError("Unable to copy to clipboard.");
+    }
+  };
+
   const handleDownload = () => {
-    if (!response) return;
-    const blob = new Blob([response], { type: "text/plain" });
+    const content = showJson ? (result || "") : (analysisText || "");
+    const blob = new Blob([content], {
+      type: "text/plain;charset=utf-8",
+    });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "symptom_analysis.txt";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-  const handleSaveToDocs = () => {
-    if (!response) return;
-    const title = prompt("Enter a title for this report:");
-    if (!title) return;
-    const saved = JSON.parse(localStorage.getItem("savedSymptomReports") || "[]");
-    saved.push({ title, text: response, date: new Date().toISOString() });
-    localStorage.setItem("savedSymptomReports", JSON.stringify(saved));
-    alert("Report saved successfully!");
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = showJson
+      ? "symptom-analysis.json"
+      : "symptom-analysis.txt";
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
     <div className={styles.container}>
-      <h2 className={styles.heading}>🩺 Symptom Checker</h2>
+      <h2 className={styles.heading}>Symptom Checker</h2>
       <p className={styles.subheading}>
-        Enter your symptoms, record voice, or upload files. Results will be translated to your selected language.
+        Describe your symptoms and (optionally) attach files.
       </p>
 
-      <form onSubmit={handleSubmit}>
-        <div className={styles.selectRow}>
-          <label>
-            OCR Language:
-            <select value={language} onChange={(e) => setLanguage(e.target.value)}>
-              <option>English</option>
-              <option>Spanish</option>
-              <option>French</option>
-              <option>German</option>
-            </select>
-          </label>
-          <label>
-            Region & Currency:
-            <select value={region} onChange={(e) => setRegion(e.target.value)}>
-              <option>United States - USD</option>
-              <option>Europe - EUR</option>
-              <option>India - INR</option>
-            </select>
-          </label>
-        </div>
+      <div className={styles.selectRow}>
+        <label>
+          Language
+          <select
+            value={lang}
+            onChange={(e) => setLang(e.target.value)}
+            className={styles.input}
+          >
+            <option value="en">English</option>
+            <option value="es">Spanish (es)</option>
+            <option value="fr">French (fr)</option>
+            <option value="de">German (de)</option>
+            <option value="hi">Hindi (hi)</option>
+            <option value="te">Telugu (te)</option>
+          </select>
+        </label>
 
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          rows={6}
-          className={styles.input}
-          placeholder="Describe your symptoms in detail..."
-          required
-        />
+        <label>
+          Region
+          <select
+            value={region}
+            onChange={(e) => setRegion(e.target.value)}
+            className={styles.input}
+          >
+            <option value="US">United States</option>
+            <option value="EU">Europe</option>
+            <option value="IN">India</option>
+          </select>
+        </label>
+      </div>
 
-        <div className={styles.buttons}>
-          <button type="submit" disabled={loading} className={styles.button}>
-            {loading ? "Analyzing..." : "Analyze"}
-          </button>
-          <button type="button" onClick={handleVoiceInput} className={styles.voiceButton}>
-            🎤 Voice Input
-          </button>
-        </div>
+      <textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        rows={6}
+        className={styles.input}
+        placeholder="e.g., headache for 2 days, mild fever, light sensitivity…"
+      />
 
-        <div className={styles.fileUpload}>
-          <label>
-            Upload Files (PDFs, Images, Videos):
-            <input type="file" accept=".pdf,image/*,video/*" multiple onChange={handleFileUpload} />
-          </label>
-        </div>
-      </form>
+      <div className={styles.fileUpload}>
+        <label>
+          Attach files
+          <input type="file" multiple onChange={handleFilesPicked} />
+        </label>
 
-      {response && (
-        <div className={styles.responseBox}>
-          <strong>Possible Causes:</strong>
-          <p>{response}</p>
-        </div>
-      )}
+        {files?.length > 0 && (
+          <div className={styles.uploadPreview}>
+            <ul>
+              {files.map((f, i) => (
+                <li key={i}>
+                  {f.name}{" "}
+                  <button type="button" onClick={() => handleRemoveFile(i)}>
+                    remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
+      <div className={styles.buttons}>
+        <button
+          onClick={handleAnalyze}
+          className={styles.button}
+          disabled={loading}
+        >
+          {loading ? "Analyzing…" : "Analyze"}
+        </button>
+        <button onClick={handleVoice} className={styles.voiceButton}>
+          🎤 Voice Input
+        </button>
+        <button onClick={handleStopVoice} className={styles.button}>
+          ⏹ Stop
+        </button>
+        <button onClick={speakResult} className={styles.button} disabled={!result}>
+          🔊 Read Out
+        </button>
+      </div>
 
       {error && <p className={styles.error}>{error}</p>}
 
-      <div className={styles.shareRow}>
-        <button onClick={handleEmail}>📧 Email</button>
-        <button onClick={handleWhatsApp}>💬 WhatsApp</button>
-        <button onClick={handleSMS}>📱 SMS</button>
-        <button onClick={handleDownload}>📂 Download</button>
-        <button onClick={handleSaveToDocs}>💾 Save to Documents</button>
-      </div>
+      {/* RESULT VIEWER with edit controls */}
+      {result && (
+        <div className={styles.responseBox}>
+          {/* Controls */}
+          <div className={styles.buttons} style={{ marginBottom: "0.5rem" }}>
+            <button
+              onClick={() => setShowJson(false)}
+              className={styles.button}
+              aria-pressed={!showJson}
+              title="Show editable text"
+            >
+              Show Text
+            </button>
+            <button
+              onClick={() => setShowJson(true)}
+              className={styles.button}
+              aria-pressed={showJson}
+              title="Show raw JSON"
+            >
+              Show JSON
+            </button>
+
+            {!showJson && !isEditing && (
+              <button
+                onClick={() => setIsEditing(true)}
+                className={styles.button}
+              >
+                Edit Text
+              </button>
+            )}
+            {!showJson && isEditing && (
+              <>
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className={styles.button}
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => {
+                    // Rebuild from JSON if user wants to revert
+                    try {
+                      const parsed = JSON.parse(result);
+                      const original =
+                        parsed?.analysis?.summary ||
+                        parsed?.analysis ||
+                        parsed?.message ||
+                        (typeof parsed === "string" ? parsed : "");
+                      setAnalysisText(original || "");
+                    } catch {
+                      // keep current analysisText
+                    }
+                    setIsEditing(false);
+                  }}
+                  className={styles.button}
+                >
+                  Cancel
+                </button>
+              </>
+            )}
+
+            <button onClick={handleCopy} className={styles.button}>
+              Copy
+            </button>
+            <button onClick={handleDownload} className={styles.button}>
+              Download
+            </button>
+          </div>
+
+          {/* Viewers */}
+          {showJson ? (
+            <pre
+              style={{ whiteSpace: "pre-wrap", wordWrap: "break-word" }}
+            >
+              {result}
+            </pre>
+          ) : isEditing ? (
+            <textarea
+              className={styles.input}
+              style={{ minHeight: 300 }}
+              value={analysisText}
+              onChange={(e) => setAnalysisText(e.target.value)}
+            />
+          ) : (
+            <pre
+              style={{ whiteSpace: "pre-wrap", wordWrap: "break-word" }}
+            >
+              {analysisText || "(No analysis text)"}
+            </pre>
+          )}
+        </div>
+      )}
 
       <p className={styles.disclaimer}>
-        ⚠️ <strong>Disclaimer:</strong> This analysis is AI-generated and does not replace professional medical advice.
+        This tool doesn’t provide medical diagnoses. If you’re experiencing
+        severe or worsening symptoms, seek urgent care.
       </p>
     </div>
   );

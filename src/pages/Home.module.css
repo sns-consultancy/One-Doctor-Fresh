@@ -157,3 +157,48 @@
   color: #334155;
   text-align: center;
 }
+/* ===== Hero header (new) ===== */
+.hero {
+  position: relative;
+  width: 100%;
+  padding: 3rem 1rem 5rem;
+  text-align: center;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0));
+  border-radius: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.heroTitle {
+  font-size: clamp(1.75rem, 2.5vw, 2.25rem);
+  font-weight: 700;
+  margin: 0;
+}
+
+.heroSubtitle {
+  font-size: clamp(0.95rem, 1.5vw, 1.075rem);
+  margin-top: 0.5rem;
+  opacity: 0.8;
+}
+
+.heroImg {
+  position: absolute;
+  top: 50%;
+  width: min(280px, 28vw);
+  max-width: 320px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.9;
+}
+
+.heroImgLeft { left: max(0.5rem, 3%); }
+.heroImgRight { right: max(0.5rem, 3%); }
+
+/* Responsive tweaks */
+@media (max-width: 900px) {
+  .heroImg { width: 200px; opacity: 0.75; }
+}
+@media (max-width: 700px) {
+  .heroImg { display: none; }
+}

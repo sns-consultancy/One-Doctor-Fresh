@@ -165,3 +165,143 @@
     height: 36px;
   }
 }
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #4f46e5; /* indigo */
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  margin: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* LEFT SIDE */
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* RIGHT SIDE */
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* Logo & Brand */
+.logoLink {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s ease;
+}
+.logoLink:hover {
+  transform: scale(1.03);
+}
+.logo {
+  height: 48px;
+  width: auto;
+  filter: brightness(0) invert(1);
+}
+.logoText {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: white;
+}
+
+/* Buttons & Links */
+.iconButton {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: background 0.2s ease;
+  text-decoration: none;
+}
+.iconButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Upgrade Button */
+.upgradeButton {
+  background: gold;
+  color: black;
+  font-weight: 600;
+  border: none;
+  padding: 0.45rem 0.9rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+.upgradeButton:hover {
+  background: #ffd700;
+}
+
+/* Dropdown Menu */
+.dropdown {
+  position: relative;
+}
+.menuButton {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+.dropdownContent {
+  position: absolute;
+  top: 2.6rem;
+  right: 0;
+  background: white;
+  color: #333;
+  border-radius: 0.5rem;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  z-index: 1000;
+}
+.dropdownContent a,
+.dropdownContent button {
+  padding: 0.6rem 1rem;
+  border: none;
+  background: none;
+  text-align: left;
+  text-decoration: none;
+  color: #333;
+  cursor: pointer;
+}
+.dropdownContent a:hover,
+.dropdownContent button:hover {
+  background: #eef;
+}
+.logoutButton {
+  color: #e11d48;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .logoText {
+    font-size: 1.2rem;
+  }
+  .logo {
+    height: 36px;
+  }
+  .nav-right {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}

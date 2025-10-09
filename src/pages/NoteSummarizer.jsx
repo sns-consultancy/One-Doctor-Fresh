@@ -2,7 +2,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import styles from "../styles/NoteSummarizer.module.css";
 
-const API_BASE = process.env.REACT_APP_API_BASE || "";
+const API_BASE = import.meta.env.VITE_API_BASE ? `${import.meta.env.VITE_API_BASE}/api` : "/api";
+const API_KEY  = import.meta.env.VITE_API_KEY;
 
 export default function NoteSummarizer() {
   const [input, setInput] = useState("");
@@ -96,7 +97,7 @@ export default function NoteSummarizer() {
     if (text.length < 10) { setError("Please paste more content (≥ 10 characters)."); return; }
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/ai/note-summarizer`, {
+      const res = await fetch(`${API_BASE}/ai/note-summarizer`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Accept": "application/json" },
         body: JSON.stringify({
@@ -132,7 +133,7 @@ export default function NoteSummarizer() {
       fd.append("ocr_lang_code", selected.tess);
       fd.append("region_currency", region);
 
-      const res = await fetch(`${API_BASE}/api/ai/note-summarizer/upload`, { method: "POST", body: fd });
+      const res = await fetch(`${API_BASE}/ai/note-summarizer/upload`, { method: "POST", body: fd });
       const data = await readJson(res);
       if (!res.ok) throw new Error(data.error || "Upload failed.");
       const out = data.summary || data.extracted_text || "Uploaded and processed successfully.";

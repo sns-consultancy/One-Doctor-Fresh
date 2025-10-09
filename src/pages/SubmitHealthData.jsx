@@ -3,8 +3,8 @@ import styles from './SubmitHealthData.module.css';
 import NavBar from '../components/NavBar';
 
 // Use environment variable for API key
-const API_KEY = process.env.REACT_APP_API_KEY;
-const API_URL = process.env.REACT_APP_API_URL;
+const API_BASE = import.meta.env.VITE_API_BASE ? `${import.meta.env.VITE_API_BASE}/api` : "/api";
+const API_KEY  = import.meta.env.VITE_API_KEY;
 
 export default function SubmitHealthData() {
   const [form, setForm] = useState({

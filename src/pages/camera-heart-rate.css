@@ -1,0 +1,9 @@
+.ch-container { max-width: 720px; margin: 1rem auto; padding: 1rem; background:#fff; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.06) }
+.ch-videoWrap { position: relative; width: 100%; background:#000; border-radius:12px; overflow:hidden }
+.ch-video { width:100%; height:auto; transform: scaleX(-1); opacity:.9 } /* mirror feels natural */
+.ch-canvas { display:none } /* hidden; used for processing */
+.ch-stats { display:flex; gap:1rem; margin:.75rem 0; flex-wrap:wrap }
+.ch-actions { display:flex; gap:.75rem; }
+.ch-actions button { padding:.6rem 1rem; border-radius:10px; border:1px solid #e5e7eb; background:#f8fafc; cursor:pointer }
+.ch-actions button:hover { background:#eef2ff }
+.ch-note { color:#6b7280; font-size:.9rem; margin-top:.75rem }

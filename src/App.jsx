@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
+import { Routes, Route, Link, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { Menu, Brain, Moon, Sun } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./index.css";
-
+import Analyzer from "./pages/Analyzer.jsx";
 // Components
 import logoUrl from "./logo.svg";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -24,7 +24,7 @@ import MedicalHistory from "./pages/MedicalHistory.jsx";
 import SymptomChecker from "./pages/SymptomChecker.jsx";
 import HealthChatbot from "./pages/HealthChatbot.jsx";
 import NoteSummarizer from "./pages/NoteSummarizer.jsx";
-import AiHistory from "./pages/AiHistory.jsx"; // ✅ exact casing
+import AiHistory from "./pages/AiHistory.jsx"; // must match file casing exactly
 import About from "./pages/About.jsx";
 import Contact from "./pages/Contact.jsx";
 import Pricing from "./pages/Pricing.jsx";
@@ -37,7 +37,7 @@ import Disclaimer from "./pages/Disclaimer.jsx";
 import CookiePolicy from "./pages/CookiePolicy.jsx";
 import AppSelector from "./pages/AppSelector.jsx";
 import FindDoctors from "./pages/FindDoctors.jsx";
-
+import NavBar from "./components/NavBar";
 function AppContent() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [aiMenuOpen, setAiMenuOpen] = useState(false);
@@ -69,7 +69,7 @@ function AppContent() {
           Authorization: `Bearer ${userToken}`,
         },
         body: JSON.stringify({
-          priceId: process.env.REACT_APP_STRIPE_PRICE_ID,
+          priceId: import.meta.env.VITE_STRIPE_PRICE_ID,
         }),
       });
       const data = await res.json();
@@ -95,6 +95,7 @@ function AppContent() {
       {!hideNav && (
         <nav className="navbar">
           <div className="nav-left">
+            <NavBar />
             <img
               src={logoUrl}
               alt="One Doctor Logo"
@@ -139,6 +140,11 @@ function AppContent() {
                     <Link to="/contact" onClick={() => setMenuOpen(false)}>Contact</Link>
                     <Link to="/pricing" onClick={() => setMenuOpen(false)}>Pricing</Link>
                     <Link to="/terms" onClick={() => setMenuOpen(false)}>Terms</Link>
+                    <Link to="/symptom-checker" onClick={() => setMenuOpen(false)}>Symptom Checker</Link>
+                    <Link to="/health-chatbot" onClick={() => setMenuOpen(false)}>Health Chatbot</Link>
+                    <Link to="/note-summarizer" onClick={() => setMenuOpen(false)}>Note Summarizer</Link>
+                    <Link to="/analyzer" onClick={() => setMenuOpen(false)}>Symptom Analyzer</Link>
+ 
                     <button
                       onClick={() => { handleLogout(); setMenuOpen(false); }}
                       className="logout-button"
@@ -216,7 +222,9 @@ function AppContent() {
         <Route path="/note-summarizer" element={<ProtectedRoute><NoteSummarizer /></ProtectedRoute>} />
         <Route path="/ai-history" element={<ProtectedRoute><AiHistory /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-
+        <Route path="/analyzer" element={<ProtectedRoute><Analyzer /></ProtectedRoute>} />
+        {/* optional alias */}
+       <Route path="/symptom-analyzer" element={<Navigate to="/analyzer" replace />} />
         {/* Public misc */}
         <Route path="/billing-history" element={<BillingHistory />} />
         <Route path="/pricing" element={<Pricing />} />

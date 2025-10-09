@@ -1,10 +1,6 @@
 // src/services/authService.js
-
-const API_BASE =
-  (import.meta.env.VITE_API_BASE ? `${import.meta.env.VITE_API_BASE}/api` : "/api");
-
-
-const API_KEY = process.env.REACT_APP_API_KEY;
+const API_BASE = "/api";
+const API_KEY  = import.meta.env.VITE_API_KEY; // optional—if you use it
 
 /** Build default headers (adds x-api-key and bearer token if present) */
 function buildHeaders(extra = {}) {

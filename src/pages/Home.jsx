@@ -14,6 +14,10 @@ import { Link } from "react-router-dom";
 import { getMedicalHistory } from "../services/healthService";
 import UpgradeModal from "../components/UpgradeModal";
 
+// Use your aliased assets (works if you have `@` alias set in Vite)
+import femaleDoc from "../assets/female-doctor.png";
+import maleDoc   from "../assets/maledoctor.png";
+
 export default function Home() {
   const [hasMedicalHistory, setHasMedicalHistory] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -31,7 +35,7 @@ export default function Home() {
         const userId = localStorage.getItem("userId");
         if (userId) {
           const response = await getMedicalHistory(userId);
-          setHasMedicalHistory(response && response.data ? true : false);
+          setHasMedicalHistory(Boolean(response && response.data));
         }
       } catch (error) {
         console.error("Error checking medical history:", error);
@@ -45,22 +49,43 @@ export default function Home() {
 
   return (
     <div className={styles.root}>
-      {/* Header */}
+      {/* ===== HERO HEADER (ADDED) ===== */}
+      <header className={styles.hero}>
+        {/* Decorative images: alt="" prevents visible fallback text */}
+        <img
+          src={femaleDoc}
+          alt=""
+          className={`${styles.heroImg} ${styles.heroImgLeft}`}
+          aria-hidden="true"
+        />
+        <img
+          src={maleDoc}
+          alt=""
+          className={`${styles.heroImg} ${styles.heroImgRight}`}
+          aria-hidden="true"
+        />
+
+        {/* Title & subtitle preserved from your snippet */}
+        <h1 className={styles.heroTitle}>One Doctor App</h1>
+        <p className={styles.heroSubtitle}>Your personal AI health assistant</p>
+      </header>
+
+      {/* ===== EXISTING HEADER STRIP WITH MOTION (KEPT) ===== */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
         className={styles.header}
       >
+        {/* If you want to hide these because the hero now has images,
+            you can remove them later—kept here to avoid deleting features */}
         <img
           src="/female-doctor.PNG"
           alt="Doctor Female"
           className={styles.doctorImage}
         />
         <div className={styles.headerText}>
-          <h1 className={styles.title}>
-            Hello, {user?.firstName || "there"}!
-          </h1>
+          <h1 className={styles.title}>Hello, {user?.firstName || "there"}!</h1>
           <p className={styles.subtitle}>
             Welcome back to your personalized health dashboard.
           </p>
@@ -72,7 +97,7 @@ export default function Home() {
         />
       </motion.div>
 
-      {/* Card Grid */}
+      {/* ===== CARD GRID (UNCHANGED) ===== */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -116,9 +141,7 @@ export default function Home() {
         <Link to="/symptom-checker" className={styles.card}>
           <Stethoscope className={styles.icon} size={40} />
           <h2 className={styles.cardTitle}>Symptom Checker</h2>
-          <p className={styles.cardDescription}>
-            Get suggestions for symptoms.
-          </p>
+          <p className={styles.cardDescription}>Get suggestions for symptoms.</p>
         </Link>
 
         {/* Note Summarizer */}
@@ -130,7 +153,7 @@ export default function Home() {
           </p>
         </Link>
 
-        {/* NEW: AI Medical History */}
+        {/* AI Medical History */}
         <Link to="/ai-history" className={styles.card}>
           <Brain className={styles.icon} size={40} />
           <h2 className={styles.cardTitle}>AI Medical History</h2>
@@ -139,7 +162,7 @@ export default function Home() {
           </p>
         </Link>
 
-        {/* NEW: Health Chatbot */}
+        {/* Health Chatbot */}
         <Link to="/health-chatbot" className={styles.card}>
           <MessageSquare className={styles.icon} size={40} />
           <h2 className={styles.cardTitle}>Health Chatbot</h2>
@@ -149,12 +172,9 @@ export default function Home() {
         </Link>
       </motion.div>
 
-      {/* Upgrade Button */}
+      {/* ===== UPGRADE (UNCHANGED) ===== */}
       <div className={styles.upgradeContainer}>
-        <button
-          className={styles.upgradeButton}
-          onClick={() => setShowModal(true)}
-        >
+        <button className={styles.upgradeButton} onClick={() => setShowModal(true)}>
           Upgrade Now
         </button>
       </div>
