@@ -53,18 +53,9 @@ export default function Home() {
       {/* ===== HERO HEADER (ADDED) ===== */}
       <header className={styles.hero}>
         {/* Decorative images: alt="" prevents visible fallback text */}
-      <img
-        src={femaleDoc}
-        alt=""
-        aria-hidden="true"
-        className={`${styles.heroImg} ${styles.heroImgLeft}`}
-      />
-      <img
-        src={maleDoc}
-        alt=""
-        aria-hidden="true"
-        className={`${styles.heroImg} ${styles.heroImgRight}`}
-      />
+      <img src="/assets/female-doctor.png" alt="" className={`${styles.heroImg} ${styles.heroImgLeft}`} aria-hidden="true" />
+      <img src="/assets/male-doctor.png"   alt="" className={`${styles.heroImg} ${styles.heroImgRight}`} aria-hidden="true" />
+
 
         {/* Title & subtitle preserved from your snippet */}
         <h1 className={styles.heroTitle}>One Doctor App</h1>
