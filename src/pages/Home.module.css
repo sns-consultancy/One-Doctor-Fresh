@@ -180,25 +180,34 @@
   margin-top: 0.5rem;
   opacity: 0.8;
 }
+/* === Make hero images smaller & responsive === */
+/* Home.module.css */
 
+/* Already have .hero, keep it positioned */
+.hero { position: relative; /* you already have this */ }
+
+/* Put text above the decorative images */
+.heroInner {
+  position: relative;
+  z-index: 2;
+}
+
+/* Keep illustrations behind */
 .heroImg {
   position: absolute;
   top: 50%;
-  width: min(280px, 28vw);
-  max-width: 320px;
   transform: translateY(-50%);
+  width: clamp(120px, 14vw, 180px);
+  max-width: 180px;
+  height: auto;
+  opacity: 0.9;
   pointer-events: none;
   user-select: none;
-  opacity: 0.9;
+  z-index: 1;            /* behind heroInner */
 }
 
-.heroImgLeft { left: max(0.5rem, 3%); }
-.heroImgRight { right: max(0.5rem, 3%); }
+.heroImgLeft  { left: clamp(0.75rem, 4vw, 3rem); }
+.heroImgRight { right: clamp(0.75rem, 4vw, 3rem); }
 
-/* Responsive tweaks */
-@media (max-width: 900px) {
-  .heroImg { width: 200px; opacity: 0.75; }
-}
-@media (max-width: 700px) {
-  .heroImg { display: none; }
-}
+@media (max-width: 900px) { .heroImg { width: clamp(110px, 22vw, 150px); } }
+@media (max-width: 700px) { .heroImg { display: none; } }

@@ -1,13 +1,17 @@
 {
   "compilerOptions": {
-    "target": "es6",
-    "checkJs": false,
-    "module": "commonjs",
-    "jsx": "react",
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
     "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
     "outDir": "dist"
   },
   "include": ["src"]

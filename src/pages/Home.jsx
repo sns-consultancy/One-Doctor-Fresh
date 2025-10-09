@@ -15,8 +15,9 @@ import { getMedicalHistory } from "../services/healthService";
 import UpgradeModal from "../components/UpgradeModal";
 
 // Use your aliased assets (works if you have `@` alias set in Vite)
+// src/pages/Home.jsx
 import femaleDoc from "../assets/female-doctor.png";
-import maleDoc   from "../assets/maledoctor.png";
+import maleDoc   from "../assets/male-doctor.png";
 
 export default function Home() {
   const [hasMedicalHistory, setHasMedicalHistory] = useState(false);
@@ -52,18 +53,18 @@ export default function Home() {
       {/* ===== HERO HEADER (ADDED) ===== */}
       <header className={styles.hero}>
         {/* Decorative images: alt="" prevents visible fallback text */}
-        <img
-          src={femaleDoc}
-          alt=""
-          className={`${styles.heroImg} ${styles.heroImgLeft}`}
-          aria-hidden="true"
-        />
-        <img
-          src={maleDoc}
-          alt=""
-          className={`${styles.heroImg} ${styles.heroImgRight}`}
-          aria-hidden="true"
-        />
+      <img
+        src={femaleDoc}
+        alt=""
+        aria-hidden="true"
+        className={`${styles.heroImg} ${styles.heroImgLeft}`}
+      />
+      <img
+        src={maleDoc}
+        alt=""
+        aria-hidden="true"
+        className={`${styles.heroImg} ${styles.heroImgRight}`}
+      />
 
         {/* Title & subtitle preserved from your snippet */}
         <h1 className={styles.heroTitle}>One Doctor App</h1>
@@ -80,7 +81,7 @@ export default function Home() {
         {/* If you want to hide these because the hero now has images,
             you can remove them later—kept here to avoid deleting features */}
         <img
-          src="/female-doctor.PNG"
+          src="/female-doctor.png"
           alt="Doctor Female"
           className={styles.doctorImage}
         />
@@ -91,7 +92,7 @@ export default function Home() {
           </p>
         </div>
         <img
-          src="/maledoctor.PNG"
+          src="/male-doctor.png"
           alt="Doctor Male"
           className={styles.doctorImage}
         />
