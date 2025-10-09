@@ -14,11 +14,6 @@ import { Link } from "react-router-dom";
 import { getMedicalHistory } from "../services/healthService";
 import UpgradeModal from "../components/UpgradeModal";
 
-// Use your aliased assets (works if you have `@` alias set in Vite)
-// src/pages/Home.jsx
-import femaleDoc from "../assets/female-doctor.png";
-import maleDoc   from "../assets/male-doctor.png";
-
 export default function Home() {
   const [hasMedicalHistory, setHasMedicalHistory] = useState(false);
   const [loading, setLoading] = useState(true);
