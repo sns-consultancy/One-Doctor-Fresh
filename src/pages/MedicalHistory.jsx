@@ -154,14 +154,33 @@ export default function MedicalHistory() {
     setError(null);
     setShowConfirm(true);
   };
-
+const saveData = async (payload) => {
+  try {
+    const res = await fetch(`${base}/save_family_history`, {
+      method: "POST",
+     headers: { "Content-Type": "application/json" },
+     body: JSON.stringify(payload),
+    });
+   if (!res.ok) throw new Error("Failed to save data");
+    // optional: toast instead of alert in production
+    alert("Data saved successfully!");
+  } catch (err) {
+   console.error("Save error:", err);
+   alert("Failed to save data.");
+   throw err; // rethrow so outer handlers can show error UI
+ }
+};
   const confirmSave = async () => {
     setSaving(true);
     try {
       await saveMedicalHistory(formData);
+      await saveData({
+        user_id: formData.user_id,
+        family_history: formData.family_history
+    });
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
-    } catch {
+    } catch (e) {
       setError("Failed to save data.");
     } finally {
       setSaving(false);
