@@ -1,5 +1,5 @@
 // src/helpers/api.js
-const BASE = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8000").replace(/\/$/, "");
+export const BASE = (import.meta.env.VITE_API_BASE_URL || "/api").replace(/\/+$/, "");
 // rest of file unchanged…
 
 

@@ -305,3 +305,78 @@
     justify-content: flex-end;
   }
 }
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: #4f46e5;
+  padding: 8px 12px;
+  margin: 8px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+.left { display: flex; align-items: center; gap: 10px; }
+.logo { width: 28px; height: 28px; }
+.logoLink { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
+.logoText { color: #fff; font-weight: 800; font-size: 1.2rem; letter-spacing: .2px; }
+
+.burger {
+  display: none;
+  font-size: 1.2rem;
+  border: 0;
+  padding: 6px 10px;
+  border-radius: 10px;
+  color: #fff;
+  background: rgba(255,255,255,.15);
+}
+@media (max-width: 980px) { .burger { display: inline-flex; } }
+
+.mainNav {
+  display: flex; align-items: center; gap: 8px;
+  flex: 1; flex-wrap: wrap; margin-left: 8px;
+}
+.pill {
+  color: #eef; text-decoration: none;
+  background: rgba(255,255,255,.15);
+  padding: 10px 14px; border-radius: 14px; font-weight: 600;
+  transition: transform .15s ease, box-shadow .15s ease, background .2s ease;
+}
+.pill:hover, .pill.active {
+  background: rgba(255,255,255,.25);
+  box-shadow: 0 6px 20px rgba(0,0,0,.15);
+  transform: translateY(-2px);
+}
+
+.right { display: flex; align-items: center; gap: 10px; }
+.menuButton {
+  background: #f8fafc; color: #111827; border: none;
+  padding: 10px 14px; border-radius: 12px; font-weight: 700; cursor: pointer;
+}
+
+.dropdown { position: relative; }
+.menu {
+  position: absolute; right: 0; top: calc(100% + 8px);
+  display: grid; gap: 6px; min-width: 220px;
+  background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 8px;
+  box-shadow: 0 12px 28px rgba(0,0,0,.18);
+  z-index: 60;
+}
+.menu a, .menu button {
+  display: block; text-decoration: none; color: #111827;
+  padding: 10px 12px; border-radius: 8px; background: transparent; border: 0; text-align: left;
+}
+.menu a:hover, .menu button:hover { background: #f3f4f6; }
+.logout { color: #ef4444; }
+
+.upgrade {
+  background: #ffd000; color: #111827; border: none;
+  padding: 10px 16px; border-radius: 12px; font-weight: 800; cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0,0,0,.2);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.upgrade:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0,0,0,.22); }
+
