@@ -1,26 +1,22 @@
+# netlify.toml (clean)
 [build]
-command = "npm ci && npm run build"
-publish = "dist"
+  command = "npm ci && npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
 
-[build.environment]
-NODE_VERSION = "20"
-
-# Metrics function
 [[redirects]]
   from = "/api/metrics"
-  to   = "/.netlify/functions/metrics"
+  to = "/.netlify/functions/metrics"
   status = 200
-  force  = true
+  force = true
 
-# General API proxy — strip the /api prefix before hitting Render
 [[redirects]]
   from = "/api/*"
-  to   = "https://one-doctor-service-fresh-ztxv.onrender.com/:splat"
+  to = "/.netlify/functions/:splat"
   status = 200
-  force  = true
+  force = true
 
-# SPA fallback LAST
 [[redirects]]
   from = "/*"
-  to   = "/index.html"
+  to = "/index.html"
   status = 200
