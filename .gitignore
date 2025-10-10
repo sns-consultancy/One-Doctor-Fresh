@@ -34,3 +34,11 @@ package-lock.json
 
 # env files
 .env*
+# builds
+dist/
+.vite/
+
+# env files
+.env
+.env.*
+!.env.example
