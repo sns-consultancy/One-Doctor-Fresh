@@ -1,4 +1,4 @@
-// vite.config.js
+// vite.config.jsx
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath, URL } from "node:url";
@@ -6,19 +6,8 @@ import { fileURLToPath, URL } from "node:url";
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    alias: {
-      "@": fileURLToPath(new URL("./src", import.meta.url)),
-    },
+    alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
   },
-  server: {
-    port: 5173,
-    proxy: {
-      "/api": {
-        target: "http://localhost:8000",
-        changeOrigin: true,
-        secure: false,
-        rewrite: (p) => p.replace(/^\/api/, ""),
-      },
-    },
-  },
+  envPrefix: "VITE_",          // ← only expose VITE_* to the client
+  // Do NOT add: define: { "process.env": process.env }
 });
